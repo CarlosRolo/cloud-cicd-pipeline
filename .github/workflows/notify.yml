@@ -1,0 +1,41 @@
+name: Notify
+
+on:
+  workflow_run:
+    workflows: ["CI", "CD"]
+    types: [completed]
+
+jobs:
+  telegram:
+    name: Telegram notification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send notification
+        run: |
+          STATUS="${{ github.event.workflow_run.conclusion }}"
+          WORKFLOW="${{ github.event.workflow_run.name }}"
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
+          COMMIT="${{ github.event.workflow_run.head_sha }}"
+          SHORT_COMMIT="${COMMIT:0:7}"
+          RUN_URL="${{ github.event.workflow_run.html_url }}"
+
+          if [ "$STATUS" = "success" ]; then
+            EMOJI="✅"
+            STATUS_TEXT="SUCCESS"
+          else
+            EMOJI="❌"
+            STATUS_TEXT="FAILED"
+          fi
+
+          MESSAGE="${EMOJI} *${STATUS_TEXT}* — ${WORKFLOW}
+          
+          📦 Repo: CarlosRolo/cloud-cicd-pipeline
+          🌿 Branch: \`${BRANCH}\`
+          🔖 Commit: \`${SHORT_COMMIT}\`
+          🔗 [Ver detalles](${RUN_URL})"
+
+          curl -s -X POST \
+            "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d parse_mode="Markdown" \
+            -d text="$MESSAGE"
