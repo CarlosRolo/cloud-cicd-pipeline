@@ -1,0 +1,26 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy to Render
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy
+        run: |
+          curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}" \
+            -H "Accept: application/json" \
+            --fail-with-body
+
+      - name: Wait for deploy
+        run: sleep 30
+
+      - name: Health check
+        run: |
+          curl -s --retry 5 --retry-delay 10 --retry-connrefused \
+            https://cloud-cicd-pipeline.onrender.com/health | \
+            grep -q '"status":"ok"'
+          echo "Health check passed!"
