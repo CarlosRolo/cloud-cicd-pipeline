@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException
-from app.models.schemas import Item, ItemCreate
 from typing import List
+
+from fastapi import APIRouter, HTTPException
+
+from app.models.schemas import Item, ItemCreate
 
 router = APIRouter(prefix="/items", tags=["items"])
 
